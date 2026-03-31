@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Plotly Analytics Dashboard | Data Science Visualization Hub</title>
+    <script src="https://cdn.plot.ly/plotly-3.1.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.4.1/papaparse.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #2d3748;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        /* Navigation */
+        .nav {
+            background: white;
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav ul {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            list-style: none;
+        }
+
+        .nav a {
+            color: #4a5568;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav a:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Chart Cards */
+        .chart-card {
+            background: white;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .chart-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 1.5rem;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .card-header h2 {
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .card-header .scenario {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-header .goal {
+            color: #48bb78;
+            margin-bottom: 0.5rem;
+        }
+
+        .dos-donts {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .dos {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+        }
+
+        .donts {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+        }
+
+        .chart-container {
+            padding: 1.5rem;
+            height: 500px;
+        }
+
+        /* Grid layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .chart-container {
+                height: 400px;
+            }
+        }
+
+        /* Footer */
+        .footer {
+            background: #2d3748;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        /* Export button */
+        .export-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+
+        .export-btn:hover {
+            background: #5a67d8;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Complete Plotly Analytics Dashboard</h1>
+        <p>Professional Data Visualization Hub | All Essential Chart Types for Data Science & Analytics</p>
+        <div class="badge">🎯 Interactive • 📈 Production-Ready • 🚀 Deployable</div>
+    </div>
+
+    <div class="nav">
+        <ul>
+            <li><a href="#comparison">Comparison</a></li>
+            <li><a href="#distribution">Distribution</a></li>
+            <li><a href="#correlation">Correlation</a></li>
+            <li><a href="#trends">Trends</a></li>
+            <li><a href="#composition">Composition</a></li>
+            <li><a href="#geospatial">Geospatial</a></li>
+            <li><a href="#advanced">Advanced</a></li>
+        </ul>
+    </div>
+
+    <div class="container">
+        <!-- SECTION 1: COMPARISON CHARTS -->
+        <h2 style="margin: 2rem 0 1rem 0; color: #2d3748;">📊 Comparison & Ranking</h2>
+        
+        <!-- Bar Chart -->
+        <div class="chart-card" id="comparison">
+            <div class="card-header">
+                <h2>📊 1. Bar Chart - Sales Performance by Region</h2>
+                <div class="scenario">🎯 Scenario: Comparing sales across different regions or categories</div>
+                <div class="goal">💡 Goal: Identify top-performing regions and rank performance</div>
+                <div class="dos-donts">
+                    <span class="dos">✅ DO: Sort bars for easy ranking, use consistent colors</span>
+                    <span class="donts">❌ DON'T: Use too many categories (>12), start y-axis above zero</span>
+                </div>
+            </div>
+            <div class="chart-container" id="barChart"></div>
+        </div>
+
+        <!-- Grouped Bar Chart -->
+        <div class="chart-card">
+            <div class="card-header">
+                <h2>📊 2. Grouped Bar Chart - Quarterly Sales by Region</h2>
+                <div class="scenario">🎯 Scenario: Comparing multiple metrics across categories</div>
+                <div class="goal">💡 Goal: Analyze seasonal patterns and regional performance trends</div>
+                <div class="dos-donts">
+                    <span class="dos">✅ DO: Limit groups to 3-4, use clear legends</span>
+                    <span class="donts">❌ DON'T: Overcrowd with too many groups, use similar colors</span>
+                </div>
+            </div>
+            <div class="chart-container" id="groupedBarChart"></div>
+        </div>
+
+        <!-- SECTION 2: DISTRIBUTION CHARTS -->
+        <h2 style="margin: 2rem 0 1rem 0; color: #2d3748;">📈 Distribution & Frequency</h2>
+        
+        <div class="grid-2">
+            <!-- Histogram -->
+            <div class="chart-card">
+                <div class="card-header">
+                    <h2>📊 3. Histogram - Customer Spending Distribution</h2>
+                    <div class="scenario">🎯 Scenario: Understanding data distribution and identifying patterns</div>
+                    <div class="goal">💡 Goal: Detect skewness, outliers, and central tendency</div>
+                    <div class="dos-donts">
+                        <span class="dos">✅ DO: Choose appropriate bin size, show normal curve overlay</span>
+                        <span class="donts">❌ DON'T: Use too few or too many bins, hide outliers</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="histogram"></div>
+            </div>
+
+            <!-- Box Plot -->
+            <div class="chart-card">
+                <div class="card-header">
+                    <h2>📊 4. Box Plot - Salary Distribution by Department</h2>
+                    <div class="scenario">🎯 Scenario: Comparing distributions and identifying outliers</div>
+                    <div class="goal">💡 Goal: Detect median, quartiles, and anomalies across groups</div>
+                    <div class="dos-donts">
+                        <span class="dos">✅ DO: Show outliers, add mean markers for context</span>
+                        <span class="donts">❌ DON'T: Hide outliers, use for small datasets (<20 points)</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="boxPlot"></div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <!-- Violin Plot -->
+            <div class="chart-card">
+                <div class="card-header">
+                    <h2>📊 5. Violin Plot - Age Distribution by Customer Segment</h2>
+                    <div class="scenario">🎯 Scenario: Visualizing full distribution with density information</div>
+                    <div class="goal">💡 Goal: See both distribution shape and statistical summary</div>
+                    <div class="dos-donts">
+                        <span class="dos">✅ DO: Combine with box plot inside, use for multimodal data</span>
+                        <span class="donts">❌ DON'T: Use with very large datasets (>10k points)</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="violinPlot"></div>
+            </div>
+
+            <!-- Density Contour -->
+            <div class="chart-card">
+                <div class="card-header">
+                    <h2>📊 6. Density Contour Plot - Bivariate Distribution</h2>
+                    <div class="scenario">🎯 Scenario: Understanding correlation and density between two variables</div>
+                    <div class="goal">💡 Goal: Identify clusters, correlation patterns, and outliers</div>
+                    <div class="dos-donts">
+                        <span class="dos">✅ DO: Use for large datasets, add marginal distributions</span>
+                        <span class="donts">❌ DON'T: Use with sparse data, ignore color scale</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="densityPlot"></div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: CORRELATION CHARTS -->
+        <h2 style="margin: 2rem 0 1rem 0; color: #2d3748;">🔄 Correlation & Relationships</h2>
+        
+        <div class="grid-2">
+            <!-- Scatter Plot -->
+            <div class="chart-card">
+                <div class="card-header">
+                    <h2>📊 7. Scatter Plot - Marketing Spend vs Revenue</h2>
+                    <div class="scenario">🎯 Scenario: Exploring relationships between two continuous variables</div>
+                    <div class="goal">💡 Goal: Identify correlation strength, direction, and outliers</div>
+                    <div class="dos-donts">
+                        <span class="dos">✅ DO: Add trend line, use transparency for overlapping points</span>
+                        <span class="donts">❌ DON'T: Overplot without transparency, ignore outliers</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="scatterPlot"></div>
+            </div>
+
+            <!-- Bubble Chart -->
+            <div class="chart-card">
+                <div class="card-header">
+                    <h2>📊 8. Bubble Chart - Market Analysis (3 Variables)</h2>
+                    <div class="scenario">🎯 Scenario: Visualizing three dimensions of data simultaneously</div>
+                    <div class="goal">💡 Goal: Show relationships between market share, growth, and size</div>
+                    <div class="dos-donts">
+                        <span class="dos">✅ DO: Scale bubbles proportionally, use clear labels</span>
+                        <span class="donts">❌ DON'T: Use too many bubbles, ignore color meaning</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="bubbleChart"></div>
+            </div>
+        </div>
+
+        <!-- Heatmap -->
+        <div class="chart-card">
+            <div class="card-header">
+                <h2>📊 9. Correlation Heatmap - Feature Relationships</h2>
+                <div class="scenario">🎯 Scenario: Visualizing correlation matrix for feature selection</div>
+                <div class="goal">💡 Goal: Identify multicollinearity and feature importance</div>
+                <div class="dos-donts">
+                    <span class="dos">✅ DO: Use diverging color scale, annotate values</span>
+                    <span class="donts">❌ DON'T: Use too many features, ignore colorblind-friendly palettes</span>
+                </div>
+            </div>
+            <div class="chart-container" id="heatmap"></div>
+        </div>
+
+        <!-- SECTION 4: TREND CHARTS -->
+        <h2 style="margin: 2rem 0 1rem 0; color: #2d3748;">📉 Time Series & Trends</h2>
+        
+        <div class="grid-2">
+            <!-- Line Chart -->
+            <div class="chart-card">
+                <div class="card-header">
+                    <h2>📊 10. Line Chart - Stock Price Trend</h2>
+                    <div class="scenario">🎯 Scenario: Tracking changes over time and forecasting trends</div>
+                    <div class="goal">💡 Goal: Identify patterns, seasonality, and long-term trends</div>
+                    <div class="dos-donts">
+                        <span class="dos">✅ DO: Show confidence intervals, use consistent time scales</span>
+                        <span class="donts">❌ DON'T: Connect missing data points, skip time periods</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="lineChart"></div>
+            </div>
+
+            <!-- Area Chart -->
+            <div class="chart-card">
+                <div class="card-header">
+                    <h2>📊 11. Area Chart - Cumulative Revenue by Channel</h2>
+                    <div class="scenario">🎯 Scenario: Showing cumulative trends and composition over time</div>
+                    <div class="goal">💡 Goal: Compare contribution of different categories over time</div>
+                    <div class="dos-donts">
+                        <span class="dos">✅ DO: Stack transparently, order categories logically</span>
+                        <span class="donts">❌ DON'T: Use too many categories, hide baseline</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="areaChart"></div>
+            </div>
+        </div>
+
+        <!-- SECTION 5: COMPOSITION CHARTS -->
+        <h2 style="margin: 2rem 0 1rem 0; color: #2d3748;">🥧 Composition & Proportions</h2>
+        
+        <div class="grid-2">
+            <!-- Pie Chart -->
+            <div class="chart-card">
+                <div class="card-header">
+                    <h2>📊 12. Pie Chart - Market Share Distribution</h2>
+                    <div class="scenario">🎯 Scenario: Showing parts of a whole with 2-5 categories</div>
+                    <div class="goal">💡 Goal: Display proportion and relative size of segments</div>
+                    <div class="dos-donts">
+                        <span class="dos">✅ DO: Limit to 5-6 slices, sort by size, use donut for multiple series</span>
+                        <span class="donts">❌ DON'T: Use for many categories, 3D effects, small slices</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="pieChart"></div>
+            </div>
+
+            <!-- Sunburst Chart -->
+            <div class="chart-card">
+                <div class="card-header">
+                    <h2>📊 13. Sunburst Chart - Hierarchical Data Structure</h2>
+                    <div class="scenario">🎯 Scenario: Visualizing multi-level hierarchical relationships</div>
+                    <div class="goal">💡 Goal: Understand nested category proportions and structure</div>
+                    <div class="dos-donts">
+                        <span class="dos">✅ DO: Limit depth to 3-4 levels, use interactive clicking</span>
+                        <span class="donts">❌ DON'T: Use too many levels, ignore color hierarchy</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="sunburstChart"></div>
+            </div>
+        </div>
+
+        <!-- SECTION 6: GEOSPATIAL CHARTS -->
+        <h2 style="margin: 2rem 0 1rem 0; color: #2d3748;">🌍 Geospatial & Maps</h2>
+        
+        <div class="grid-2">
+            <!-- Choropleth Map -->
+            <div class="chart-card">
+                <div class="card-header">
+                    <h2>📊 14. Choropleth Map - Global GDP Distribution</h2>
+                    <div class="scenario">🎯 Scenario: Visualizing geographic patterns and regional variations</div>
+                    <div class="goal">💡 Goal: Identify geographic clusters and regional disparities</div>
+                    <div class="dos-donts">
+                        <span class="dos">✅ DO: Use appropriate color scale, include legend</span>
+                        <span class="donts">❌ DON'T: Use divergent scales for one-directional data</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="choroplethMap"></div>
+            </div>
+
+            <!-- Scatter Mapbox -->
+            <div class="chart-card">
+                <div class="card-header">
+                    <h2>📊 15. Scatter Map - Store Locations & Performance</h2>
+                    <div class="scenario">🎯 Scenario: Displaying point-based geographic data</div>
+                    <div class="goal">💡 Goal: Show spatial distribution and cluster patterns</div>
+                    <div class="dos-donts">
+                        <span class="dos">✅ DO: Use cluster markers, add hover information</span>
+                        <span class="donts">❌ DON'T: Overplot without clustering, ignore zoom levels</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="mapboxChart"></div>
+            </div>
+        </div>
+
+        <!-- SECTION 7: ADVANCED CHARTS -->
+        <h2 style="margin: 2rem 0 1rem 0; color: #2d3748;">🚀 Advanced Analytics</h2>
+        
+        <div class="grid-2">
+            <!-- 3D Scatter Plot -->
+            <div class="chart-card">
+                <div class="card-header">
+                    <h2>📊 16. 3D Scatter Plot - Multi-dimensional Analysis</h2>
+                    <div class="scenario">🎯 Scenario: Exploring relationships in 3+ dimensions</div>
+                    <div class="goal">💡 Goal: Visualize clustering and patterns in high-dimensional space</div>
+                    <div class="dos-donts">
+                        <span class="dos">✅ DO: Enable rotation, use color for 4th dimension</span>
+                        <span class="donts">❌ DON'T: Use for categorical data without clear labeling</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="scatter3d"></div>
+            </div>
+
+            <!-- Parallel Coordinates -->
+            <div class="chart-card">
+                <div class="card-header">
+                    <h2>📊 17. Parallel Coordinates - Multidimensional Patterns</h2>
+                    <div class="scenario">🎯 Scenario: Analyzing high-dimensional multivariate data</div>
+                    <div class="goal">💡 Goal: Identify patterns across multiple variables simultaneously</div>
+                    <div class="dos-donts">
+                        <span class="dos">✅ DO: Standardize axes, use brushing for selection</span>
+                        <span class="donts">❌ DON'T: Use too many dimensions (>10), ignore color</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="parallelCoords"></div>
+            </div>
+        </div>
+
+        <!-- Waterfall Chart -->
+        <div class="chart-card">
+            <div class="card-header">
+                <h2>📊 18. Waterfall Chart - Financial Bridge Analysis</h2>
+                <div class="scenario">🎯 Scenario: Showing cumulative effect of sequential changes</div>
+                <div class="goal">💡 Goal: Understand how initial value changes to final value</div>
+                <div class="dos-donts">
+                    <span class="dos">✅ DO: Color code positive/negative, show totals</span>
+                    <span class="donts">❌ DON'T: Skip intermediate steps, hide connectors</span>
+                </div>
+            </div>
+            <div class="chart-container" id="waterfallChart"></div>
+        </div>
+
+        <!-- Funnel Chart -->
+        <div class="chart-card">
+            <div class="card-header">
+                <h2>📊 19. Funnel Chart - Conversion Analysis</h2>
+                <div class="scenario">🎯 Scenario: Analyzing conversion rates and drop-offs</div>
+                <div class="goal">💡 Goal: Identify bottlenecks in customer journey</div>
+                <div class="dos-donts">
+                    <span class="dos">✅ DO: Show conversion rates, use consistent stages</span>
+                    <span class="donts">❌ DON'T: Skip stages, ignore drop-off reasons</span>
+                </div>
+            </div>
+            <div class="chart-container" id="funnelChart"></div>
+        </div>
+
+        <!-- Gantt Chart -->
+        <div class="chart-card">
+            <div class="card-header">
+                <h2>📊 20. Gantt Chart - Project Timeline</h2>
+                <div class="scenario">🎯 Scenario: Visualizing project schedules and dependencies</div>
+                <div class="goal">💡 Goal: Track progress, identify critical path, manage resources</div>
+                <div class="dos-donts">
+                    <span class="dos">✅ DO: Show dependencies, highlight critical path</span>
+                    <span class="donts">❌ DON'T: Overcrowd with tasks, hide milestones</span>
+                </div>
+            </div>
+            <div class="chart-container" id="ganttChart"></div>
+        </div>
+
+        <!-- Radar Chart -->
+        <div class="chart-card">
+            <div class="card-header">
+                <h2>📊 21. Radar Chart - Performance Metrics Comparison</h2>
+                <div class="scenario">🎯 Scenario: Comparing multiple metrics across entities</div>
+                <div class="goal">💡 Goal: Identify strengths and weaknesses across categories</div>
+                <div class="dos-donts">
+                    <span class="dos">✅ DO: Normalize scales, limit to 8-10 metrics</span>
+                    <span class="donts">❌ DON'T: Use for ranking, compare too many entities</span>
+                </div>
+            </div>
+            <div class="chart-container" id="radarChart"></div>
+        </div>
+
+        <!-- Sankey Diagram -->
+        <div class="chart-card">
+            <div class="card-header">
+                <h2>📊 22. Sankey Diagram - Flow Analysis</h2>
+                <div class="scenario">🎯 Scenario: Visualizing flows, migrations, and pathways</div>
+                <div class="goal">💡 Goal: Understand volume and direction of flows between stages</div>
+                <div class="dos-donts">
+                    <span class="dos">✅ DO: Use color coding, simplify complex flows</span>
+                    <span class="donts">❌ DON'T: Overcomplicate with too many nodes</span>
+                </div>
+            </div>
+            <div class="chart-container" id="sankeyChart"></div>
+        </div>
+    </div>
+
+    <button class="export-btn" onclick="exportAsHTML()">📥 Export Dashboard as HTML</button>
+
+    <div class="footer">
+        <p>🎯 Complete Plotly Visualization Suite | Built for Data Science & Analytics</p>
+        <p>✨ All charts are interactive - Hover, Zoom, Pan, and Explore!</p>
+        <p>🚀 Deploy on Vercel, GitHub Pages, or any static hosting</p>
+    </div>
+
+    <script>
+        // ==================== 1. BAR CHART ====================
+        const barData = {
+            x: ['North America', 'Europe', 'Asia Pacific', 'Latin America', 'Middle East', 'Africa'],
+            y: [12400, 9800, 15600, 5200, 3800, 2100],
+            colors: ['#667eea', '#48bb78', '#ed8936', '#9f7aea', '#f687b3', '#4299e1']
+        };
+        
+        Plotly.newPlot('barChart', [{
+            x: barData.x,
+            y: barData.y,
+            type: 'bar',
+            marker: {
+                color: barData.colors,
+                line: { color: 'white', width: 2 }
+            },
+            text: barData.y.map(v => `$${v.toLocaleString()}M`),
+            textposition: 'auto',
+            hovertemplate: 'Region: %{x}<br>Sales: $%{y:,.0f}M<extra></extra>'
+        }], {
+            title: { text: 'Annual Sales by Region (Millions USD)', font: { size: 16 } },
+            xaxis: { title: 'Region', tickangle: -45 },
+            yaxis: { title: 'Sales (Million USD)', gridcolor: '#e2e8f0' },
+            plot_bgcolor: '#ffffff',
+            paper_bgcolor: '#ffffff',
+            margin: { t: 50, b: 80, l: 60, r: 30 }
+        });
+
+        // ==================== 2. GROUPED BAR CHART ====================
+        const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+        const regions = ['North America', 'Europe', 'Asia Pacific'];
+        
+        const groupedBarData = regions.map((region, idx) => ({
+            x: quarters,
+            y: [[3200, 2800, 3600, 2800], [2400, 2200, 2600, 2600], [3400, 3800, 4200, 4200]][idx],
+            name: region,
+            type: 'bar',
+            marker: { color: barData.colors[idx * 2] }
+        }));
+        
+        Plotly.newPlot('groupedBarChart', groupedBarData, {
+            title: 'Quarterly Sales Performance',
+            xaxis: { title: 'Quarter' },
+            yaxis: { title: 'Sales (Million USD)' },
+            barmode: 'group',
+            legend: { orientation: 'h', y: -0.2 }
+        });
+
+        // ==================== 3. HISTOGRAM ====================
+        const spendingData = Array.from({length: 500}, () => Math.random() * 200 + 50);
+        
+        Plotly.newPlot('histogram', [{
+            x: spendingData,
+            type: 'histogram',
+            nbinsx: 30,
+            marker: { color: '#667eea', line: { color: 'white', width: 1 } },
+            opacity: 0.7,
+            name: 'Customer Spend'
+        }, {
+            x: spendingData,
+            type: 'histogram',
+            histnorm: 'probability density',
+            nbinsx: 30,
+            marker: { color: '#48bb78' },
+            opacity: 0.5,
+            name: 'Density',
+            yaxis: 'y2'
+        }], {
+            title: 'Customer Spending Distribution',
+            xaxis: { title: 'Spending Amount ($)' },
+            yaxis: { title: 'Frequency', domain: [0, 0.7] },
+            yaxis2: { title: 'Density', overlaying: 'y', side: 'right' },
+            bargap: 0.05
+        });
+
+        // ==================== 4. BOX PLOT ====================
+        const deptSalaries = {
+            'Engineering': Array.from({length: 100}, () => 80000 + Math.random() * 70000),
+            'Sales': Array.from({length: 80}, () => 50000 + Math.random() * 60000),
+            'Marketing': Array.from({length: 60}, () => 55000 + Math.random() * 50000),
+            'HR': Array.from({length: 40}, () => 45000 + Math.random() * 35000),
+            'Finance': Array.from({length: 50}, () => 65000 + Math.random() * 55000)
+        };
+        
+        const boxTraces = Object.entries(deptSalaries).map(([dept, salaries]) => ({
+            y: salaries,
+            name: dept,
+            type: 'box',
+            boxmean: 'sd',
+            marker: { color: '#667eea' },
+            line: { width: 2 }
+        }));
+        
+        Plotly.newPlot('boxPlot', boxTraces, {
+            title: 'Salary Distribution by Department',
+            yaxis: { title: 'Annual Salary ($)', tickformat: '$,.0f' },
+            showlegend: true
+        });
+
+        // ==================== 5. VIOLIN PLOT ====================
+        const customerSegments = {
+            'Premium': Array.from({length: 150}, () => 35 + Math.random() * 25),
+            'Regular': Array.from({length: 200}, () => 28 + Math.random() * 20),
+            'Budget': Array.from({length: 180}, () => 22 + Math.random() * 15),
+            'New': Array.from({length: 100}, () => 25 + Math.random() * 18)
+        };
+        
+        const violinTraces = Object.entries(customerSegments).map(([segment, ages]) => ({
+            y: ages,
+            name: segment,
+            type: 'violin',
+            box: { visible: true, width: 0.2 },
+            meanline: { visible: true },
+            points: 'all',
+            jitter: 0.3,
+            pointpos: -0.2,
+            marker: { opacity: 0.3 }
+        }));
+        
+        Plotly.newPlot('violinPlot', violinTraces, {
+            title: 'Age Distribution by Customer Segment',
+            yaxis: { title: 'Age (Years)' },
+            violinmode: 'group'
+        });
+
+        // ==================== 6. DENSITY CONTOUR ====================
+        const n = 1000;
+        const x1 = Array.from({length: n}, () => Math.random() * 100);
+        const y1 = x1.map(x => x * 0.8 + Math.random() * 20);
+        
+        Plotly.newPlot('densityPlot', [{
+            x: x1,
+            y: y1,
+            type: 'histogram2dcontour',
+            colorscale: 'Viridis',
+            contours: { coloring: 'heatmap', showlabels: true },
+            hovertemplate: 'X: %{x:.1f}<br>Y: %{y:.1f}<br>Density: %{z}<extra></extra>'
+        }], {
+            title: 'Bivariate Density Distribution',
+            xaxis: { title: 'Variable X' },
+            yaxis: { title: 'Variable Y' }
+        });
+
+        // ==================== 7. SCATTER PLOT ====================
+        const marketingSpend = Array.from({length: 150}, () => 5000 + Math.random() * 45000);
+        const revenue = marketingSpend.map(spend => spend * 3.5 + Math.random() * 20000);
+        
+        Plotly.newPlot('scatterPlot', [{
+            x: marketingSpend,
+            y: revenue,
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 8,
+                color: revenue,
+                colorscale: 'RdYlGn',
+                showscale: true,
+                colorbar: { title: 'Revenue ($)' }
+            },
+            text: marketingSpend.map((s, i) => `Spend: $${s.toFixed(0)}<br>Revenue: $${revenue[i].toFixed(0)}`),
+            hovertemplate: '%{text}<extra></extra>'
+        }, {
+            x: marketingSpend,
+            y: marketingSpend.map(s => s * 3.5),
+            mode: 'lines',
+            type: 'scatter',
+            name: 'Trend Line',
+            line: { color: 'red', dash: 'dash', width: 2 }
+        }], {
+            title: 'Marketing Spend vs Revenue Correlation',
+            xaxis: { title: 'Marketing Spend ($)' },
+            yaxis: { title: 'Revenue ($)' }
+        });
+
+        // ==================== 8. BUBBLE CHART ====================
+        const companies = ['TechCorp', 'DataInc', 'CloudSys', 'AISolutions', 'Analytix', 'SmartData'];
+        const marketShare = [28, 22, 18, 15, 10, 7];
+        const growthRate = [12, 18, 25, 35, 20, 15];
+        const revenueSize = [850, 620, 480, 320, 210, 140];
+        
+        Plotly.newPlot('bubbleChart', [{
+            x: marketShare,
+            y: growthRate,
+            mode: 'markers',
+            marker: {
+                size: revenueSize.map(s => s / 10),
+                color: revenueSize,
+                colorscale: 'Viridis',
+                showscale: true,
+                colorbar: { title: 'Revenue ($M)' },
+                sizemode: 'diameter',
+                sizeref: 2
+            },
+            text: companies,
+            hovertemplate: 'Company: %{text}<br>Market Share: %{x}%<br>Growth: %{y}%<br>Revenue: $%{marker.size*10}M<extra></extra>'
+        }], {
+            title: 'Market Analysis: Share vs Growth (Bubble Size = Revenue)',
+            xaxis: { title: 'Market Share (%)', range: [0, 35] },
+            yaxis: { title: 'Growth Rate (%)', range: [0, 45] }
+        });
+
+        // ==================== 9. HEATMAP ====================
+        const features = ['Revenue', 'Profit', 'Customer Sat', 'Market Share', 'Growth', 'Efficiency'];
+        const correlations = [
+            [1.0, 0.85, 0.72, 0.68, 0.75, 0.62],
+            [0.85, 1.0, 0.65, 0.71, 0.82, 0.58],
+            [0.72, 0.65, 1.0, 0.55, 0.48, 0.91],
+            [0.68, 0.71, 0.55, 1.0, 0.79, 0.44],
+            [0.75, 0.82, 0.48, 0.79, 1.0, 0.51],
+            [0.62, 0.58, 0.91, 0.44, 0.51, 1.0]
+        ];
+        
+        Plotly.newPlot('heatmap', [{
+            z: correlations,
+            x: features,
+            y: features,
+            type: 'heatmap',
+            colorscale: 'RdBu',
+            zmin: -1,
+            zmax: 1,
+            text: correlations.map(row => row.map(v => v.toFixed(2))),
+            texttemplate: '%{text}',
+            textfont: { size: 10 },
+            hovertemplate: '%{x} vs %{y}: %{z:.2f}<extra></extra>'
+        }], {
+            title: 'Feature Correlation Matrix',
+            xaxis: { tickangle: -45 },
+            yaxis: { autorange: 'reversed' },
+            width: 600,
+            height: 500
+        });
+
+        // ==================== 10. LINE CHART ====================
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const stockPrices = [150, 152, 148, 155, 162, 158, 165, 170, 168, 175, 180, 185];
+        
+        Plotly.newPlot('lineChart', [{
+            x: months,
+            y: stockPrices,
+            type: 'scatter',
+            mode: 'lines+markers',
+            marker: { size: 8, color: '#667eea' },
+            line: { color: '#667eea', width: 3, shape: 'spline' },
+            fill: 'tozeroy',
+            fillcolor: 'rgba(102, 126, 234, 0.2)',
+            name: 'Stock Price'
+        }], {
+            title: 'Stock Price Trend Analysis',
+            xaxis: { title: 'Month' },
+            yaxis: { title: 'Price ($)', tickprefix: '$' }
+        });
+
+        // ==================== 11. AREA CHART ====================
+        const channels = ['Direct', 'Organic', 'Social', 'Email', 'Referral'];
+        const monthlyData = [
+            [25, 28, 30, 32, 35, 38, 40, 42, 45, 48, 50, 52],
+            [30, 32, 35, 38, 42, 45, 48, 50, 52, 55, 58, 60],
+            [15, 18, 22, 26, 30, 34, 38, 42, 46, 50, 54, 58],
+            [12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34],
+            [8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
+        ];
+        
+        const areaTraces = channels.map((channel, idx) => ({
+            x: months,
+            y: monthlyData[idx],
+            name: channel,
+            type: 'scatter',
+            mode: 'lines',
+            stackgroup: 'one',
+            line: { width: 0.5 },
+            fillcolor: ['#667eea', '#48bb78', '#ed8936', '#9f7aea', '#f687b3'][idx]
+        }));
+        
+        Plotly.newPlot('areaChart', areaTraces, {
+            title: 'Cumulative Revenue by Marketing Channel',
+            xaxis: { title: 'Month' },
+            yaxis: { title: 'Revenue ($K)' }
+        });
+
+        // ==================== 12. PIE CHART ====================
+        Plotly.newPlot('pieChart', [{
+            values: [35, 28, 22, 15],
+            labels: ['Competitor A', 'Competitor B', 'Competitor C', 'Others'],
+            type: 'pie',
+            hole: 0.3,
+            marker: { colors: ['#667eea', '#48bb78', '#ed8936', '#cbd5e0'] },
+            textinfo: 'label+percent',
+            hovertemplate: '%{label}: %{value}%<extra></extra>'
+        }], {
+            title: 'Market Share Distribution'
+        });
+
+        // ==================== 13. SUNBURST CHART ====================
+        Plotly.newPlot('sunburstChart', [{
+            type: 'sunburst',
+            labels: ['Total Sales', 'North America', 'USA', 'Canada', 'Mexico', 'Europe', 'UK', 'Germany', 'France', 'Asia', 'China', 'Japan', 'India'],
+            parents: ['', 'Total Sales', 'North America', 'North America', 'North America', 'Total Sales', 'Europe', 'Europe', 'Europe', 'Total Sales', 'Asia', 'Asia', 'Asia'],
+            values: [100, 45, 25, 12, 8, 30, 12, 10, 8, 25, 12, 8, 5],
+            branchvalues: 'total',
+            marker: { colorscale: 'Viridis' },
+            hovertemplate: '%{label}<br>Sales: %{value}%<extra></extra>'
+        }], {
+            title: 'Sales Hierarchy by Region'
+        });
+
+        // ==================== 14. CHOROPLETH MAP ====================
+        const gdpData = {
+            'USA': 25.5, 'CHN': 17.7, 'JPN': 4.2, 'GER': 4.0, 'IND': 3.7, 'GBR': 3.1, 'FRA': 2.9, 'CAN': 2.1, 'ITA': 2.0, 'BRA': 1.9, 'AUS': 1.7, 'MEX': 1.4, 'KOR': 1.7, 'RUS': 1.8, 'ESP': 1.4
+        };
+        
+        Plotly.newPlot('choroplethMap', [{
+            type: 'choropleth',
+            locationmode: 'country names',
+            locations: Object.keys(gdpData),
+            z: Object.values(gdpData),
+            text: Object.keys(gdpData),
+            colorscale: 'YlOrRd',
+            colorbar: { title: 'GDP (Trillion USD)' },
+            hovertemplate: '<b>%{location}</b><br>GDP: %{z}T USD<extra></extra>'
+        }], {
+            title: 'Global GDP Distribution (2024)',
+            geo: { showframe: false, projection: { type: 'natural earth' } }
+        });
+
+        // ==================== 15. MAPBOX SCATTER ====================
+        const stores = [
+            { name: 'NYC Flagship', lat: 40.7128, lon: -74.0060, revenue: 1250 },
+            { name: 'LA Downtown', lat: 34.0522, lon: -118.2437, revenue: 980 },
+            { name: 'Chicago Loop', lat: 41.8781, lon: -87.6298, revenue: 750 },
+            { name: 'Houston Center', lat: 29.7604, lon: -95.3698, revenue: 620 },
+            { name: 'Phoenix Mall', lat: 33.4484, lon: -112.0740, revenue: 480 }
+        ];
+        
+        Plotly.newPlot('mapboxChart', [{
+            type: 'scattermapbox',
+            lat: stores.map(s => s.lat),
+            lon: stores.map(s => s.lon),
+            mode: 'markers',
+            marker: { size: stores.map(s => s.revenue / 30), color: 'red' },
+            text: stores.map(s => `${s.name}<br>Revenue: $${s.revenue}M`),
+            hoverinfo: 'text'
+        }], {
+            title: 'Store Locations & Performance',
+            mapbox: { style: 'light', center: { lat: 39.5, lon: -98.0 }, zoom: 3 },
+            margin: { t: 0, b: 0, l: 0, r: 0 }
+        });
+
+        // ==================== 16. 3D SCATTER PLOT ====================
+        const features3d = {
+            x: Array.from({length: 200}, () => Math.random() * 100),
+            y: Array.from({length: 200}, () => Math.random() * 100),
+            z: Array.from({length: 200}, () => Math.random() * 100),
+            cluster: Array.from({length: 200}, () => Math.floor(Math.random() * 4))
+        };
+        
+        Plotly.newPlot('scatter3d', [{
+            x: features3d.x,
+            y: features3d.y,
+            z: features3d.z,
+            mode: 'markers',
+            type: 'scatter3d',
+            marker: {
+                size: 5,
+                color: features3d.cluster,
+                colorscale: 'Viridis',
+                showscale: true,
+                colorbar: { title: 'Cluster' }
+            },
+            hovertemplate: 'X: %{x:.1f}<br>Y: %{y:.1f}<br>Z: %{z:.1f}<extra></extra>'
+        }], {
+            title: '3D Cluster Analysis',
+            scene: {
+                xaxis: { title: 'Feature 1' },
+                yaxis: { title: 'Feature 2' },
+                zaxis: { title: 'Feature 3' }
+            }
+        });
+
+        // ==================== 17. PARALLEL COORDINATES ====================
+        const dataParallel = Array.from({length: 100}, () => ({
+            'Sales': 50000 + Math.random() * 150000,
+            'Profit': 10000 + Math.random() * 50000,
+            'Customers': 500 + Math.random() * 2000,
+            'Rating': 3 + Math.random() * 2
+        }));
+        
+        Plotly.newPlot('parallelCoords', [{
+            type: 'parcoords',
+            dimensions: [
+                { label: 'Sales', values: dataParallel.map(d => d['Sales']) },
+                { label: 'Profit', values: dataParallel.map(d => d['Profit']) },
+                { label: 'Customers', values: dataParallel.map(d => d['Customers']) },
+                { label: 'Rating', values: dataParallel.map(d => d['Rating']), range: [3, 5] }
+            ],
+            line: { color: dataParallel.map(d => d['Profit']), colorscale: 'Viridis' }
+        }], {
+            title: 'Multi-dimensional Performance Analysis'
+        });
+
+        // ==================== 18. WATERFALL CHART ====================
+        const waterfallData = {
+            x: ['Starting Revenue', 'New Customers', 'Upsells', 'Churn', 'Discounts', 'Ending Revenue'],
+            y: [100, 25, 15, -12, -8, 120],
+            measure: ['absolute', 'relative', 'relative', 'relative', 'relative', 'total']
+        };
+        
+        Plotly.newPlot('waterfallChart', [{
+            type: 'waterfall',
+            x: waterfallData.x,
+            y: waterfallData.y,
+            measure: waterfallData.measure,
+            text: waterfallData.y.map(v => v > 0 ? `+$${v}M` : `-$${Math.abs(v)}M`),
+            connector: { line: { color: 'rgb(63, 63, 63)' } },
+            increasing: { marker: { color: '#48bb78' } },
+            decreasing: { marker: { color: '#f56565' } },
+            totals: { marker: { color: '#667eea' } }
+        }], {
+            title: 'Revenue Bridge Analysis',
+            yaxis: { title: 'Revenue (Million USD)' }
+        });
+
+        // ==================== 19. FUNNEL CHART ====================
+        Plotly.newPlot('funnelChart', [{
+            type: 'funnel',
+            y: ['Visitors', 'Signups', 'Trials', 'Conversions', 'Retained'],
+            x: [10000, 2500, 850, 320, 210],
+            textinfo: 'value+percent initial',
+            marker: { color: ['#667eea', '#48bb78', '#ed8936', '#9f7aea', '#f687b3'] }
+        }], {
+            title: 'Conversion Funnel Analysis'
+        });
+
+        // ==================== 20. GANTT CHART ====================
+        const tasks = [
+            { Task: 'Research', Start: '2024-01-01', Finish: '2024-02-15', Complete: 100 },
+            { Task: 'Design', Start: '2024-02-01', Finish: '2024-03-15', Complete: 80 },
+            { Task: 'Development', Start: '2024-03-01', Finish: '2024-05-30', Complete: 45 },
+            { Task: 'Testing', Start: '2024-05-15', Finish: '2024-06-30', Complete: 20 },
+            { Task: 'Deployment', Start: '2024-06-15', Finish: '2024-07-15', Complete: 0 }
+        ];
+        
+        const ganttTraces = tasks.map(task => ({
+            x: [task.Start, task.Finish],
+            y: [task.Task, task.Task],
+            type: 'scatter',
+            mode: 'lines',
+            line: { width: 20, color: `rgba(102, 126, 234, ${task.Complete / 100})` },
+            name: `${task.Task} (${task.Complete}% Complete)`
+        }));
+        
+        Plotly.newPlot('ganttChart', ganttTraces, {
+            title: 'Project Timeline Gantt Chart',
+            xaxis: { title: 'Date', type: 'date' },
+            yaxis: { title: 'Tasks', autorange: 'reversed' }
+        });
+
+        // ==================== 21. RADAR CHART ====================
+        const metrics = ['Sales', 'Profit', 'Growth', 'Efficiency', 'Satisfaction', 'Innovation'];
+        
+        Plotly.newPlot('radarChart', [{
+            type: 'scatterpolar',
+            r: [85, 72, 90, 78, 88, 82],
+            theta: metrics,
+            fill: 'toself',
+            name: 'Company A',
+            marker: { color: '#667eea' }
+        }, {
+            type: 'scatterpolar',
+            r: [78, 85, 75, 82, 79, 88],
+            theta: metrics,
+            fill: 'toself',
+            name: 'Company B',
+            marker: { color: '#48bb78' }
+        }], {
+            title: 'Competitive Benchmark Analysis',
+            polar: { radialaxis: { range: [0, 100] } }
+        });
+
+        // ==================== 22. SANKEY DIAGRAM ====================
+        const sankeyData = {
+            type: 'sankey',
+            orientation: 'h',
+            node: {
+                pad: 15,
+                thickness: 20,
+                line: { color: 'black', width: 0.5 },
+                label: ['Total', 'Website', 'Social', 'Email', 'Mobile App', 'Converted', 'Not Converted'],
+                color: ['#667eea', '#48bb78', '#ed8936', '#9f7aea', '#f687b3', '#48bb78', '#f56565']
+            },
+            link: {
+                source: [0, 0, 0, 0, 1, 2, 3, 4],
+                target: [1, 2, 3, 4, 5, 5, 5, 5],
+                value: [4000, 2500, 1500, 2000, 800, 1200, 600, 900]
+            }
+        };
+        
+        Plotly.newPlot('sankeyChart', [sankeyData], {
+            title: 'Customer Journey Flow Analysis',
+            height: 500
+        });
+        
+        // Export function
+        function exportAsHTML() {
+            const htmlContent = document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'plotly_analytics_dashboard.html';
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+    </script>
+</body>
+</html>
